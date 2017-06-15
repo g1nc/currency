@@ -1,7 +1,6 @@
 require 'currency/version'
 require 'net/http'
 require 'ox'
-require 'byebug'
 
 module Currency
   DATA_URL = 'http://www.cbr.ru/scripts/xml_daily.asp?date_req=%{date}'
