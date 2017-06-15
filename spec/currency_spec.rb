@@ -11,27 +11,36 @@ RSpec.describe Currency do
     @res.stubs(:body).returns(content)
   end
 
-  it 'convert ruble value to currency without nominal' do
-    ex = Currency::Exchange.new('USD')
-    Net::HTTP.expects(:start).returns(@res)
-    expect(ex.to_cur(57.0241)).to eq(1)
+  it 'convert same currency' do
+    ex = Currency::Exchange.new(code: 'USD', amount: 1)
+    Net::HTTP.expects(:start).returns(@res).never
+    expect(ex.convert_to('USD')).to eq(1)
   end
 
-  it 'convert currency value to ruble without nominal' do
-    ex = Currency::Exchange.new('USD')
+  it 'convert USD value to RUB' do
+    ex = Currency::Exchange.new(code: 'USD', amount: 1)
     Net::HTTP.expects(:start).returns(@res)
-    expect(ex.to_rub(1)).to eq(57.0241)
+    expect(ex.convert_to('RUB')).to eq(57.0241)
   end
 
-  it 'convert ruble value to currency with nominal' do
-    ex = Currency::Exchange.new('AMD')
+  it 'convert RUB value to USD' do
+    ex = Currency::Exchange.new(code: 'RUB', amount: 57.0241)
     Net::HTTP.expects(:start).returns(@res)
-    expect(ex.to_cur(11.7940)).to eq(100)
+    expect(ex.convert_to('USD')).to eq(1)
   end
 
-  it 'convert currency value to ruble with nominal' do
-    ex = Currency::Exchange.new('AMD')
+  it 'convert USD value to GBP' do
+    ex = Currency::Exchange.new(code: 'USD', amount: 1)
     Net::HTTP.expects(:start).returns(@res)
-    expect(ex.to_rub(100)).to eq(11.7940)
+    expect(ex.convert_to('GBP')).to eq(0.805347791455058)
+  end
+
+  it 'convert USD value to GBP and RUB with scale' do
+    ex = Currency::Exchange.new(code: 'USD', amount: 1)
+    Net::HTTP.expects(:start).returns(@res)
+    expect(ex.convert_to(%w[GBP RUB], 2)).to eq({
+      'GBP' => 0.81,
+      'RUB' => 57.02
+    })
   end
 end

@@ -1,6 +1,5 @@
-require "bundler/setup"
-require "currency"
-require "byebug"
+require 'bundler/setup'
+require 'currency'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

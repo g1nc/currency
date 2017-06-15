@@ -1,41 +1,59 @@
 require 'currency/version'
 require 'net/http'
-require 'byebug'
 require 'ox'
+require 'byebug'
 
 module Currency
   DATA_URL = 'http://www.cbr.ru/scripts/xml_daily.asp?date_req=%{date}'
 
   class Exchange
-    def initialize(code)
-      @code = code
+    def initialize(code:, amount:)
+      @code   = code
+      @amount = amount
     end
 
-    def to_rub(amount)
-      amount * value / nominal
-    end
+    def convert_to(code, scale = nil)
+      return @amount if @code == code
 
-    def to_cur(amount)
-      amount / value * nominal
+      @data = data
+      if code.is_a? Array
+        result = multiple_value(code, scale)
+      else
+        result = single_value(code, scale)
+      end
+      result
     end
 
     private
 
-    def value
-      @currency ||= currency
-      @currency.locate('Value').first.text.sub(',', '.').to_f
+    def multiple_value(code, scale)
+      result = {}
+      code.each { |c| result[c] = single_value(c, scale) }
+      result
     end
 
-    def nominal
-      @currency ||= currency
-      @currency.locate('Nominal').first.text.to_i
+    def single_value(code, scale)
+      result = @amount
+      result *= value(@code) / nominal(@code) if @code != 'RUB'
+      result /= value(code) * nominal(code)   if code  != 'RUB'
+      return result.round(scale) unless scale.nil?
+      result
     end
 
-    def currency
-      doc = Ox.parse(data)
-      doc.ValCurs.nodes.find do |node|
-        node.locate('CharCode').first.text == @code
+    def value(code)
+      currency_value(code, 'Value').sub(',', '.').to_f
+    end
+
+    def nominal(code)
+      currency_value(code, 'Nominal').to_i
+    end
+
+    def currency_value(code, field)
+      doc = Ox.parse(@data)
+      currency = doc.ValCurs.nodes.find do |node|
+        node.locate('CharCode').first.text == code
       end
+      currency.locate(field).first.text
     end
 
     def data
