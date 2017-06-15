@@ -35,6 +35,21 @@ RSpec.describe Currency do
     expect(ex.convert_to('GBP')).to eq(0.805347791455058)
   end
 
+  it 'convert USD value to GBP with scale' do
+    ex = Currency::Exchange.new(code: 'USD', amount: 1)
+    Net::HTTP.expects(:start).returns(@res)
+    expect(ex.convert_to('GBP', 2)).to eq(0.81)
+  end
+
+  it 'convert USD value to GBP and RUB' do
+    ex = Currency::Exchange.new(code: 'USD', amount: 1)
+    Net::HTTP.expects(:start).returns(@res)
+    expect(ex.convert_to(%w[GBP RUB])).to eq({
+      'GBP' => 0.805347791455058,
+      'RUB' => 57.0241
+    })
+  end
+
   it 'convert USD value to GBP and RUB with scale' do
     ex = Currency::Exchange.new(code: 'USD', amount: 1)
     Net::HTTP.expects(:start).returns(@res)
